@@ -1,0 +1,3 @@
+[submodule "low_cost_sensors"]
+	path = low_cost_sensors
+	url = git@github.com:ARG-NCTU/low_cost_sensors.git

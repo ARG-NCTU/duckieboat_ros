@@ -1,0 +1,17 @@
+<launch>
+
+    <arg name="veh"/>
+    <arg name="sim" default="false" />
+    <arg name="station_keeping_dis" default="3.5" />
+    <arg name="final_goal" default="[11,3]" />
+
+    <group ns="$(arg veh)">
+        <node pkg="control" type="pose_keeping.py" name="Pose_keeping" output="screen" >
+            <param name="sim" value="$(arg sim)"/> 
+            <param name="station_keeping_dis" value="$(arg station_keeping_dis)"/> 
+            <param name="final_goal" value="$(arg final_goal)"/> 
+        </node>
+
+    </group>
+
+</launch>
