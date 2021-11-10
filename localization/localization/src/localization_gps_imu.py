@@ -9,11 +9,12 @@ import rospy
 from sensor_msgs.msg import NavSatFix, Imu
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Float64
 from std_msgs.msg import String
 from message_filters import ApproximateTimeSynchronizer, TimeSynchronizer
 from std_srvs.srv import EmptyRequest, EmptyResponse, Empty
-from duckiepond.srv import SetValue, SetValueRequest, SetValueResponse
+from duckieboat_msgs.srv import SetValue, SetValueRequest, SetValueResponse
 import message_filters
 
 from geodesy.utm import UTMPoint, fromLatLong
@@ -37,6 +38,7 @@ class LocailizationGPSImu(object):
         self.start = False   
         self.covariance = np.zeros((36,), dtype=float)
         self.odometry = Odometry()
+        self.slam_pose = PoseStamped()
         self.br = tf.TransformBroadcaster()
         
         # param
@@ -57,6 +59,7 @@ class LocailizationGPSImu(object):
 
         # Publisher
         self.pub_odm = rospy.Publisher("~odometry", Odometry, queue_size=1)
+        self.pub_pose = rospy.Publisher("~slam_pose", PoseStamped, queue_size=1)
         self.pub_lat = rospy.Publisher("~pub2moos/VEH_LAT",Float64, queue_size=1)
         self.pub_lon = rospy.Publisher("~pub2moos/VEH_LON",Float64, queue_size=1)
         self.pub_x = rospy.Publisher("~pub2moos/VEH_X",Float64, queue_size=1)
@@ -191,10 +194,15 @@ class LocailizationGPSImu(object):
         self.prior_location_y = y
         prior_time = rospy.get_rostime()
         
+        self.slam_pose.pose.position.x = self.odometry.pose.pose.position.x
+        self.slam_pose.pose.position.y = self.odometry.pose.pose.position.y
+        self.slam_pose.pose.position.z = self.odometry.pose.pose.position.z
+        self.slam_pose.pose.orientation  = self.odometry.pose.pose.orientation 
         # publish
         self.odometry.header.stamp = rospy.Time.now()
         self.odometry.header.frame_id = "map"
         self.pub_odm.publish(self.odometry)
+        self.pub_pose.publish(self.slam_pose)
 
         # tf transform
         self.br.sendTransform((self.odometry.pose.pose.position.x, \
