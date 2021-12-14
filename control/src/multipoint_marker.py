@@ -1,18 +1,20 @@
 #! /usr/bin/env python3
 import rospy
 import math
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Point
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 import queue
 
 r = 7.5
+robot_radius = 3
 points = queue.Queue(maxsize=20)
 
 reverse = False
 # pt_list =  [(-3,-1),(-0.5,-13),(2,-25),(12,-23),(4.5,-12.5),(3,-2.5),(9,-4),(15.5,-12.5),(22,-21),(32,-19),(23.5,-12),(15,-5.5),(20,-7),(31,-12),(42,-17),(2,-25),(-3,-1)]
 pt_list = [(-71, 181), (-71, 151), (-41, 151), (-41, 181)]
+# pt_list = [(-660, 390), (-660, 360), (-630, 360), (-630, 390)]
 p_list = []
 
 if reverse :
@@ -32,11 +34,13 @@ rospy.init_node("multi_waypoint")
 sim = rospy.get_param("~nav/sim",False)
 pub = rospy.Publisher("move_base_simple/goal", PoseStamped, queue_size=1)
 pub_points = rospy.Publisher("visualization_marker", MarkerArray, queue_size=1)
+pub_position_circle = rospy.Publisher("visualization_circle", Marker, queue_size=1)
 Markers = MarkerArray()
 Markers.markers = []
+pi2 = math.radians(360)
 
 def get_marker():
-    i = 0
+    i = 1
     for pt in pt_list:
         marker = Marker()
         marker.header.stamp = rospy.Time.now()
@@ -53,8 +57,8 @@ def get_marker():
         marker.scale.z = 1
         marker.color.a = 1.0
         marker.color.r = 0
-        marker.color.g = 1
-        marker.color.b = 0
+        marker.color.g = 0
+        marker.color.b = 1
         Markers.markers.append(marker)
 
 get_marker()
@@ -64,6 +68,29 @@ def cb_odom(msg):
     global goal
     x = odom.pose.pose.position.x
     y = odom.pose.pose.position.y
+
+    marker = Marker()
+    marker.header.stamp = rospy.Time.now()
+    marker.header.frame_id = 'odom'
+    marker.type = marker.LINE_STRIP
+    marker.action = marker.ADD
+    circumference = []
+    for i in range(16+1):
+        p = Point()
+        p.x = x + robot_radius* math.cos(i*pi2/16)
+        p.y = y + robot_radius* math.sin(i*pi2/16)
+        p.z = 0.1
+        circumference.append(p)
+
+    marker.pose.orientation.w = 1
+    marker.points = circumference
+    marker.scale.x = 0.05
+    marker.color.a = 1.0
+    marker.color.r = 0
+    marker.color.g = 0
+    marker.color.b = 1
+    pub_position_circle.publish(marker)
+
     dis = math.sqrt(math.pow(x- goal[0],2)+math.pow(y- goal[1],2))
     if dis<r:
         points.put(goal)
