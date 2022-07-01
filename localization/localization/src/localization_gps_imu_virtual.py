@@ -51,8 +51,10 @@ class LocailizationGPSImu(object):
         self.location_y = 0
         self.prior_location_x = 0
         self.prior_location_y = 0
-        self.prior_time = 0
+        self.prior_time = rospy.get_rostime()
         self.time = 0
+
+        
 
         # Service
         self.srv_imu_offset = rospy.Service('~imu_offset', SetValue, self.cb_srv_imu_offest)
@@ -70,8 +72,8 @@ class LocailizationGPSImu(object):
         
 
         # Subscriber
-        sub_imu = message_filters.Subscriber("~imu/data", Imu)
-        sub_gps = message_filters.Subscriber("~fix", NavSatFix)
+        sub_imu = message_filters.Subscriber("/wamv/sensors/imu/imu/data", Imu)
+        sub_gps = message_filters.Subscriber("/wamv/sensors/gps/gps/fix", NavSatFix)
         ats = ApproximateTimeSynchronizer((sub_imu, sub_gps), queue_size = 1, slop = 0.1)
         ats.registerCallback(self.cb_gps_imu)
 
@@ -96,7 +98,12 @@ class LocailizationGPSImu(object):
         roll = tf.transformations.euler_from_quaternion(q)[0]
         pitch = tf.transformations.euler_from_quaternion(q)[1]
         yaw = tf.transformations.euler_from_quaternion(q)[2]
-        #self.pub_heading.publish(yaw)
+        if yaw < 0:
+            yaw_degree = yaw * 180/3.14*-1
+        else:
+            yaw_degree = 360 - (yaw*180/3.14)
+
+        self.pub_heading.publish(yaw_degree+90)
         self.pub_pitch.publish(pitch)
         yaw = yaw + self.imu_rotate
 
@@ -166,11 +173,6 @@ class LocailizationGPSImu(object):
         self.pub_y.publish(y)
 
         #speed
-        if(self.prior_location_x == 0):
-            self.prior_location_x = x
-            self.prior_location_y = y
-            self.prior_time = rospy.get_rostime()
-        
 
         self.time = rospy.get_rostime()
         self.location_x = x
@@ -186,7 +188,7 @@ class LocailizationGPSImu(object):
         if(heading<0):
             heading = 360+heading
         
-        self.pub_heading.publish(heading)
+        #self.pub_heading.publish(heading)
 
         
 
@@ -200,7 +202,7 @@ class LocailizationGPSImu(object):
         self.slam_pose.pose.orientation  = self.odometry.pose.pose.orientation 
         # publish
         self.odometry.header.stamp = rospy.Time.now()
-        self.odometry.header.frame_id = "map"
+        self.odometry.header.frame_id = "odom"
         self.pub_odm.publish(self.odometry)
         self.pub_pose.publish(self.slam_pose)
 
@@ -209,7 +211,7 @@ class LocailizationGPSImu(object):
                          self.odometry.pose.pose.position.y, self.odometry.pose.pose.position.z), \
                         (self.odometry.pose.pose.orientation.x, self.odometry.pose.pose.orientation.y, \
                         self.odometry.pose.pose.orientation.z, self.odometry.pose.pose.orientation.w), \
-                        rospy.Time.now(),"/base_link","/odom")
+                        rospy.Time.now(),"/wamv/base_link","/odom")
 
         q = tf.transformations.quaternion_from_euler(0, 0, 0)
         self.br.sendTransform((self.utm_orig.easting, self.utm_orig .northing, 0), \
