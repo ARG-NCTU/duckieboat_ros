@@ -6,6 +6,7 @@ from sensor_msgs.msg import Joy
 from duckieboat_msgs.msg import MotorCmd,Heading
 from std_msgs.msg import Float64
 from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import String
 
 class JoyMapper(object):
     def __init__(self):
@@ -14,95 +15,78 @@ class JoyMapper(object):
 
         # Publications
         self.pub_motor_cmd = rospy.Publisher("motor_cmd", MotorCmd, queue_size=1)
+        self.pub_moos_auto = rospy.Publisher("/boat/change_mode", String, queue_size=1)
+        
+        # pub for testing
+        self.pub_joy_transfer = rospy.Publisher("/boat/vr_joy", Float32MultiArray, queue_size=1)
 
         # Subscriptions
-        self.sub_cmd_drive = rospy.Subscriber("cmd_drive",MotorCmd,self.cbCmd,queue_size=1)
+        self.sub_cmd_drive = rospy.Subscriber("/boat/pub2ros/thrusters/rudder",Float64, self.cbCmd, queue_size=1)
         self.sub_joy = rospy.Subscriber("/boat/vr_joy", Float32MultiArray, self.cbJoy, queue_size=1)
-        #self.sub_right = rospy.Subscriber("pub2ros/thrusters/right_thrust_cmd",Float64,self.rcmd,queue_size=1)
-        #self.sub_left = rospy.Subscriber("pub2ros/thrusters/left_thrust_cmd",Float64,self.lcmd,queue_size=1)
+        
+        # sub for testing
+        self.sub_joy_transfer = rospy.Subscriber("/boat/joy", Joy, self.cbJoy_transfer, queue_size=1)
+        
         #varibles
         self.emergencyStop = False
         self.autoMode = False
         self.motor_msg = MotorCmd()
         self.motor_msg.right = 0
         self.motor_msg.left = 0
+        self.speed = 0
 
         #timer
-        self.timer = rospy.Timer(rospy.Duration(0.2),self.cb_publish)
+        self.timer = rospy.Timer(rospy.Duration(0.2), self.cb_publish)
         self.count = 0
+
+    def cbJoy_transfer(self, joy_msg):
+        self.joy = joy_msg
+        boat_heading_msg = Heading()
+
+        arr_msg = Float32MultiArray()
+        arr_msg.data = [0]*4
+
+        arr_msg.data[0] = self.joy.axes[1]
+        arr_msg.data[1] = self.joy.axes[3]
+        arr_msg.data[2] = joy_msg.buttons[7]
+        arr_msg.data[3] = joy_msg.buttons[8]
+
+        self.pub_joy_transfer.publish(arr_msg)
+
+            
+            
 
     def cb_publish(self,event):
         if self.emergencyStop:
             self.motor_msg.right = 0
             self.motor_msg.left = 0
 
-	self.motor_msg.right = 0.85*self.motor_msg.right
-	self.motor_msg.left = 0.85*self.motor_msg.left        
+        print("small motor : " + str(self.motor_msg.right))
+
+    	self.motor_msg.right = -0.7*self.speed
+	self.motor_msg.left = -self.motor_msg.right        
         self.pub_motor_cmd.publish(self.motor_msg)
 
-    #def rcmd(self, rcmd_msg):
-        #if not self.emergencyStop and self.autoMode:
-            #self.motor_msg.right = max(min((rcmd_msg/100),1),-1)
-
-    #def lcmd(self, lcmd_msg):
-        #if not self.emergencyStop and self.autoMode:
-            #self.motor_msg.left = max(min((lcmd_msg/100),1),-1)   
-            
-
     def cbCmd(self, cmd_msg):
-        if not self.emergencyStop and self.autoMode:
-            self.motor_msg.right = max(min(cmd_msg.angular.z,1),-1)
-            self.motor_msg.left = - self.motor_msg.right
+        if not self.emergencyStop and self.autoMode: 
+            rudder = cmd_msg.data/100
+            self.motor_msg.right = max(min(rudder,1),-1)
+            self.motor_msg.left = -self.motor_msg.right
 
     def cbJoy(self, joy_msg):
         # mode button TBD
-        #self.processButtons(joy_msg)
-        if not self.emergencyStop and not self.autoMode:
-            self.joy = joy_msg
-            boat_heading_msg = Heading()
 
-            speed = self.joy.data[1]
-
-            self.count = self.count + 1
-            if self.count % 20 == 0 :
-                print("small motor : " + str(speed))
-                self.count = 0
-
-            self.motor_msg.right = max(min(speed, 1),-1)
-            self.motor_msg.left = -self.motor_msg.right
-
-    # buttons TBD
-    def processButtons(self, joy_msg):
-        # Button A
-        if (joy_msg.buttons[0] == 1):
-            rospy.loginfo('A button')
-            
-        # Y button
-        elif (joy_msg.buttons[3] == 1):
-            rospy.loginfo('Y button')
-
-        # Left back button
-        elif (joy_msg.buttons[4] == 1):
-            rospy.loginfo('left back button')
-
-        # Right back button
-        elif (joy_msg.buttons[5] == 1):
-            rospy.loginfo('right back button')
-
-        # Back button
-        elif (joy_msg.buttons[6] == 1):
-            rospy.loginfo('back button')
-            
-        # Start button
-        elif (joy_msg.buttons[7] == 1):
+        if (joy_msg.data[2] == 1):
             self.autoMode = not self.autoMode
             if self.autoMode:
                 rospy.loginfo('going auto')
+                self.pub_moos_auto.publish("STATION-KEEPING")
+
             else:
                 rospy.loginfo('going manual')
+                self.pub_moos_auto.publish("LOITERING")
 
-        # Power/middle button
-        elif (joy_msg.buttons[8] == 1):
+        elif (joy_msg.data[3] == 1):
             self.emergencyStop = not self.emergencyStop
             if self.emergencyStop:
                 rospy.loginfo('emergency stop activate')
@@ -110,16 +94,20 @@ class JoyMapper(object):
                 self.motor_msg.left = 0
             else:
                 rospy.loginfo('emergency stop release')
-        # Left joystick button
-        elif (joy_msg.buttons[9] == 1):
-            rospy.loginfo('left joystick button')
 
-        else:
-            some_active = sum(joy_msg.buttons) > 0
-            if some_active:
-                rospy.loginfo('No binding for joy_msg.buttons = %s' % str(joy_msg.buttons))
+        if self.emergencyStop:
+            self.ch1_pwm = 0
+            self.ch2_pwm = 0
 
+        if not self.emergencyStop and not self.autoMode:
+            self.joy = joy_msg
+            boat_heading_msg = Heading()
+
+            self.speed = self.joy.data[1]
+            self.speed = max(min(self.speed, 1),-1)
+        
     def on_shutdown(self):
+
         self.motor_msg.right = 0
         self.motor_msg.left = 0
         self.pub_motor_cmd.publish(self.motor_msg)
