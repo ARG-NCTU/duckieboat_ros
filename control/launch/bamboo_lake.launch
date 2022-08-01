@@ -1,0 +1,8 @@
+<launch>
+    <arg name="veh" default="wamv" />
+
+
+    <node ns="$(arg veh)" pkg="control" type="multipoint_bamboo.py" name="multipoint_bamboo" output="screen">
+    </node>
+
+</launch>
