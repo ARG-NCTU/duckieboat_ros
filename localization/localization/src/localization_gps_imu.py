@@ -201,6 +201,7 @@ class LocailizationGPSImu(object):
         # publish
         self.odometry.header.stamp = rospy.Time.now()
         self.odometry.header.frame_id = "map"
+        self.slam_pose.header = self.odometry.header
         self.pub_odm.publish(self.odometry)
         self.pub_pose.publish(self.slam_pose)
 
@@ -209,12 +210,12 @@ class LocailizationGPSImu(object):
                          self.odometry.pose.pose.position.y, self.odometry.pose.pose.position.z), \
                         (self.odometry.pose.pose.orientation.x, self.odometry.pose.pose.orientation.y, \
                         self.odometry.pose.pose.orientation.z, self.odometry.pose.pose.orientation.w), \
-                        rospy.Time.now(),"/base_link","/odom")
+                        rospy.Time.now(),"/base_link","/map")
 
         q = tf.transformations.quaternion_from_euler(0, 0, 0)
         self.br.sendTransform((self.utm_orig.easting, self.utm_orig .northing, 0), \
             (q[0], q[1], q[2], q[3]), \
-            rospy.Time.now(),"/odom","/utm")
+            rospy.Time.now(),"/map","/utm")
 
         rad_2_deg = 180/math.pi
         print("X = ", self.pose.position.x, ", Y = ", self.pose.position.y)
