@@ -21,7 +21,7 @@ class navigation_task():
         self.count = 0
         self.obs_list = []
         self.pt_list = []
-        str_info = "format=lawnmower, x=15, y=55, height=40, width=40, lane_width=10, rows=east-west, degs=90"
+        str_info = "format=lawnmower, x=20, y=-17.5, height=20, width=15, lane_width=10, rows=east-west, degs=90"
         pattern = pyivp.string2SegList(str_info)
         for i in range(pattern.size()):
             s_x = pattern.get_vx(i)
@@ -34,7 +34,7 @@ class navigation_task():
         
         self.pt_length = len(self.pt_list)
         self.last = False
-        self.radius = 4
+        self.radius = 5
 
         print("Robot Radius: ", self.radius)
         
