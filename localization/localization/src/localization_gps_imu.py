@@ -59,7 +59,7 @@ class LocailizationGPSImu(object):
 
         # Publisher
         self.pub_odm = rospy.Publisher("~odometry", Odometry, queue_size=1)
-        self.pub_pose = rospy.Publisher("~slam_pose", PoseStamped, queue_size=1)
+        self.pub_pose = rospy.Publisher("~pose", PoseStamped, queue_size=1)
         self.pub_lat = rospy.Publisher("~pub2moos/VEH_LAT",Float64, queue_size=1)
         self.pub_lon = rospy.Publisher("~pub2moos/VEH_LON",Float64, queue_size=1)
         self.pub_x = rospy.Publisher("~pub2moos/VEH_X",Float64, queue_size=1)
@@ -71,7 +71,7 @@ class LocailizationGPSImu(object):
 
         # Subscriber
         sub_imu = message_filters.Subscriber("/gx5/imu/data", Imu)
-        sub_gps = message_filters.Subscriber("/wamv/fix", NavSatFix)
+        sub_gps = message_filters.Subscriber("fix", NavSatFix)
         ats = ApproximateTimeSynchronizer((sub_imu, sub_gps), queue_size = 1, slop = 0.1)
         ats.registerCallback(self.cb_gps_imu)
 
