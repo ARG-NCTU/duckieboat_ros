@@ -155,44 +155,44 @@ class LocailizationGPSImu(object):
         self.odometry.pose.pose.orientation = pose.orientation
 
         #utm to gps
-        east = posterior_x.mean()+self.utm_orig.easting
-        north = posterior_y.mean()+self.utm_orig.northing
-        filter_latitude, filter_longitude = self.utmToLatLng(51, east, north)
-        self.pub_lat.publish(filter_latitude)
-        self.pub_lon.publish(filter_longitude)
-        x = (posterior_x.mean()-10)*1.2
-        y = ((posterior_y.mean()-15))*1.2
-        self.pub_x.publish(x)
-        self.pub_y.publish(y)
+        # east = posterior_x.mean()+self.utm_orig.easting
+        # north = posterior_y.mean()+self.utm_orig.northing
+        # filter_latitude, filter_longitude = self.utmToLatLng(51, east, north)
+        # self.pub_lat.publish(filter_latitude)
+        # self.pub_lon.publish(filter_longitude)
+        # x = (posterior_x.mean()-10)*1.2
+        # y = ((posterior_y.mean()-15))*1.2
+        # self.pub_x.publish(x)
+        # self.pub_y.publish(y)
 
         #speed
-        if(self.prior_location_x == 0):
-            self.prior_location_x = x
-            self.prior_location_y = y
-            self.prior_time = rospy.get_rostime()
+        # if(self.prior_location_x == 0):
+        #     self.prior_location_x = x
+        #     self.prior_location_y = y
+        #     self.prior_time = rospy.get_rostime()
         
 
-        self.time = rospy.get_rostime()
-        self.location_x = x
-        self.location_y = y
+        # self.time = rospy.get_rostime()
+        # self.location_x = x
+        # self.location_y = y
 
 
 
-        distance = sqrt(pow(self.location_x-self.prior_location_x,2)+pow(self.location_y-self.prior_location_y,2))
-        speed = distance/(self.time.to_nsec()-self.prior_time.to_nsec()) *1000000000
-        self.pub_speed.publish(speed)
-        heading = atan2((self.location_y-self.prior_location_y),(self.location_x-self.prior_location_x))
-        heading = heading*180/3.14
-        if(heading<0):
-            heading = 360+heading
+        # distance = sqrt(pow(self.location_x-self.prior_location_x,2)+pow(self.location_y-self.prior_location_y,2))
+        # speed = distance/(self.time.to_nsec()-self.prior_time.to_nsec()) *1000000000
+        # self.pub_speed.publish(speed)
+        # heading = atan2((self.location_y-self.prior_location_y),(self.location_x-self.prior_location_x))
+        # heading = heading*180/3.14
+        # if(heading<0):
+        #     heading = 360+heading
         
-        self.pub_heading.publish(heading)
+        # self.pub_heading.publish(heading)
 
         
 
-        self.prior_location_x = x
-        self.prior_location_y = y
-        self.prior_time = rospy.get_rostime()
+        # self.prior_location_x = x
+        # self.prior_location_y = y
+        # self.prior_time = rospy.get_rostime()
         
         self.slam_pose.pose.position.x = self.odometry.pose.pose.position.x
         self.slam_pose.pose.position.y = self.odometry.pose.pose.position.y
