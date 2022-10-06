@@ -3,7 +3,7 @@
     <arg name="longitude" default="121.000183"/>
     <arg name="veh" default="wamv" />
     <arg name="gps_duplicate" default="false"/>
-    <arg name="imu_rotate" default='-1.57' />
+    <arg name="imu_rotate" default='0' />
     <group ns="$(arg veh)">	
       <node unless="$(arg gps_duplicate)" pkg="localization" type="localization_gps_imu.py" name="localization_gps_imu" respawn="false" output="screen">
           <param name="latitude" value="$(arg latitude)"/>

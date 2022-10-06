@@ -70,8 +70,8 @@ class LocailizationGPSImu(object):
         
 
         # Subscriber
-        sub_imu = message_filters.Subscriber("/gx5/imu/data", Imu)
-        sub_gps = message_filters.Subscriber("fix", NavSatFix)
+        sub_imu = message_filters.Subscriber("/mavros/imu/data", Imu)
+        sub_gps = message_filters.Subscriber("/mavros/global_position/global", NavSatFix)
         ats = ApproximateTimeSynchronizer((sub_imu, sub_gps), queue_size = 1, slop = 0.1)
         ats.registerCallback(self.cb_gps_imu)
 

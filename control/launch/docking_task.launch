@@ -1,0 +1,9 @@
+<launch>
+    <arg name="veh" default="wamv" />
+    <arg name="goal_dis" default='3.5' />
+
+    <node ns="$(arg veh)" pkg="control" type="multipoint_docking.py" name="docking_multipoint" output="screen">
+        <param name="goal_dis" value="$(arg goal_dis)"/>
+    </node>
+
+</launch>
