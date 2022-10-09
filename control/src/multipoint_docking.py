@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import rospy
 import math
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 import numpy as np
@@ -18,16 +18,18 @@ class docking_task():
 
         self.radius = rospy.get_param("~goal_dis", 3.5)
         self.last_goal = False
-        
+        self.no_dock_pose = True
         # self.points = Queue.Queue(maxsize=20)
         self.goal = [0, 0]
         
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
+        self.pub_cmd = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         
         self.sub = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
         self.sub_pose = rospy.Subscriber("docking_pose", PoseStamped, self.cb_dock, queue_size=1)
 
     def cb_dock(self, msg):
+        self.no_dock_pose = False
         if self.last_goal == False:
             self.goal[0] = msg.pose.position.x+12
             self.goal[1] = msg.pose.position.y
@@ -38,8 +40,14 @@ class docking_task():
 
 
     def cb_odom(self, msg):
-        if(self.goal == [0, 0]):
-            return
+        if self.no_dock_pose == True:
+            # cmd_vel = Twist()
+            # cmd_vel.linear.x = 0.3
+            # self.pub_cmd.publish(cmd_vel)
+            self.goal = [msg.pose.pose.position.x-10, msg.pose.pose.position.y-1]
+            # return
+        # if(self.goal == [0, 0]):
+        #     return
         odom = msg
         x = odom.pose.pose.position.x
         y = odom.pose.pose.position.y
@@ -51,8 +59,6 @@ class docking_task():
             elif self.last_goal == False:
                 self.last_goal = True
                 print("Position ready, start docking")
-                
-            
 
         pose = PoseStamped()
         pose.header = Header()
