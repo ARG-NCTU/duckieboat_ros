@@ -31,12 +31,14 @@ class docking_task():
     def cb_dock(self, msg):
         self.no_dock_pose = False
         if self.last_goal == False:
-            self.goal[0] = msg.pose.position.x+12
-            self.goal[1] = msg.pose.position.y
+            print("Position goal")
+            self.goal[0] = msg.pose.position.x
+            self.goal[1] = msg.pose.position.y-12
 
         elif self.last_goal == True:
-            self.goal[0] = msg.pose.position.x+3
-            self.goal[1] = msg.pose.position.y
+            print("Dock position goal")
+            self.goal[0] = msg.pose.position.x
+            self.goal[1] = msg.pose.position.y-2
 
 
     def cb_odom(self, msg):
@@ -44,7 +46,7 @@ class docking_task():
             # cmd_vel = Twist()
             # cmd_vel.linear.x = 0.3
             # self.pub_cmd.publish(cmd_vel)
-            self.goal = [msg.pose.pose.position.x-10, msg.pose.pose.position.y-1]
+            self.goal = [msg.pose.pose.position.x+3, msg.pose.pose.position.y+10]
             # return
         # if(self.goal == [0, 0]):
         #     return
@@ -54,12 +56,13 @@ class docking_task():
         dis = math.sqrt(math.pow(x- self.goal[0],2)+math.pow(y- self.goal[1],2))
         if dis< self.radius:
             if self.last_goal == True:
-                print("Dock reach")
+                pass
+                # print("Dock reach")
 
             elif self.last_goal == False:
                 self.last_goal = True
-                print("Position ready, start docking")
-
+                # print("Position Ready, Start dock")
+                
         pose = PoseStamped()
         pose.header = Header()
         pose.header.frame_id = "map"
