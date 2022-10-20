@@ -2,7 +2,7 @@
 import rospy
 import math
 from geometry_msgs.msg import PoseStamped, Twist
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Bool
 from nav_msgs.msg import Odometry
 import numpy as np
 import Queue
@@ -19,14 +19,19 @@ class docking_task():
         self.radius = rospy.get_param("~goal_dis", 3.5)
         self.last_goal = False
         self.no_dock_pose = True
+        self.docking_action = True
         # self.points = Queue.Queue(maxsize=20)
         self.goal = [0, 0]
         
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
         self.pub_cmd = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         
-        self.sub = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
+        self.sub = rospy.Subscriber("/wamv/docking_action", Bool, self.cb_docking_action, queue_size=1)
+        self.sub_dock_action = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
         self.sub_pose = rospy.Subscriber("docking_pose", PoseStamped, self.cb_dock, queue_size=1)
+
+    def cb_docking_action(self, msg):
+        self.docking_action = msg.data
 
     def cb_dock(self, msg):
         self.no_dock_pose = False
@@ -43,13 +48,8 @@ class docking_task():
 
     def cb_odom(self, msg):
         if self.no_dock_pose == True:
-            # cmd_vel = Twist()
-            # cmd_vel.linear.x = 0.3
-            # self.pub_cmd.publish(cmd_vel)
             self.goal = [msg.pose.pose.position.x+3, msg.pose.pose.position.y+10]
-            # return
-        # if(self.goal == [0, 0]):
-        #     return
+
         odom = msg
         x = odom.pose.pose.position.x
         y = odom.pose.pose.position.y
@@ -62,13 +62,14 @@ class docking_task():
             elif self.last_goal == False:
                 self.last_goal = True
                 # print("Position Ready, Start dock")
-                
-        pose = PoseStamped()
-        pose.header = Header()
-        pose.header.frame_id = "map"
-        pose.pose.position.x = self.goal[0]
-        pose.pose.position.y = self.goal[1]
-        self.pub_goal.publish(pose)
+        
+        if self.docking_action == True:
+            pose = PoseStamped()
+            pose.header = Header()
+            pose.header.frame_id = "map"
+            pose.pose.position.x = self.goal[0]
+            pose.pose.position.y = self.goal[1]
+            self.pub_goal.publish(pose)
 
     def on_shutdown(self):
         rospy.loginfo("[%s] Shutdown." %(self.node_name))
