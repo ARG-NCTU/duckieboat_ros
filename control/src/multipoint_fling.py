@@ -11,7 +11,7 @@ import csv
 from std_srvs.srv import Empty
 import yaml
 
-class docking_task():
+class fling_task():
     def __init__(self):
         self.node_name = rospy.get_name()
         # initiallize boat status
@@ -24,13 +24,13 @@ class docking_task():
         
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
         self.pub_cmd = rospy.Publisher("cmd_vel", Twist, queue_size=1)
-        self.angle_action = False
+        self.nav_fling_action = True
         self.sub = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
         self.sub_pose = rospy.Subscriber("fling_pose", PoseStamped, self.cb_dock, queue_size=1)
-        self.sub_angle_start = rospy.Subscriber("angle_action_state", Bool, self.cb_angle_action_state)
+        self.sub_fling_navi = rospy.Subscriber("/wamv/nav_to_fling_action", Bool, self.cb_action_state)
 
-    def cb_angle_action_state(self, msg):
-        self.angle_action = msg.data
+    def cb_action_state(self, msg):
+        self.nav_fling_action = msg.data
 
     def cb_dock(self, msg):
         self.no_dock_pose = False
@@ -47,13 +47,8 @@ class docking_task():
 
     def cb_odom(self, msg):
         if self.no_dock_pose == True:
-            # cmd_vel = Twist()
-            # cmd_vel.linear.x = 0.3
-            # self.pub_cmd.publish(cmd_vel)
             self.goal = [msg.pose.pose.position.x-10, msg.pose.pose.position.y+1]
-            # return
-        # if(self.goal == [0, 0]):
-        #     return
+        
         odom = msg
         x = odom.pose.pose.position.x
         y = odom.pose.pose.position.y
@@ -66,20 +61,21 @@ class docking_task():
             elif self.last_goal == False:
                 self.last_goal = True
                 # print("Position Ready, Start dock")
+         
                 
-        pose = PoseStamped()
-        pose.header = Header()
-        pose.header.frame_id = "map"
-        pose.pose.position.x = self.goal[0]
-        pose.pose.position.y = self.goal[1]
-        if self.angle_action == False:
+        if self.nav_fling_action == True:
+            pose = PoseStamped()
+            pose.header = Header()
+            pose.header.frame_id = "map"
+            pose.pose.position.x = self.goal[0]
+            pose.pose.position.y = self.goal[1]
             self.pub_goal.publish(pose)
 
     def on_shutdown(self):
         rospy.loginfo("[%s] Shutdown." %(self.node_name))
 
 if __name__ == '__main__':
-    rospy.init_node('docking_task',anonymous=False)
-    docking_task_node = docking_task()
-    rospy.on_shutdown(docking_task_node.on_shutdown)
+    rospy.init_node('fling_task',anonymous=False)
+    fling_task_node = fling_task()
+    rospy.on_shutdown(fling_task_node.on_shutdown)
     rospy.spin()
