@@ -24,10 +24,9 @@ class docking_task():
         self.goal = [0, 0]
         
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
-        self.pub_cmd = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         
-        self.sub = rospy.Subscriber("/wamv/docking_action", Bool, self.cb_docking_action, queue_size=1)
-        self.sub_dock_action = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
+        self.sub_dock_action = rospy.Subscriber("/wamv/docking_action", Bool, self.cb_docking_action, queue_size=1)
+        self.sub_odom = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
         self.sub_pose = rospy.Subscriber("docking_pose", PoseStamped, self.cb_dock, queue_size=1)
 
     def cb_docking_action(self, msg):

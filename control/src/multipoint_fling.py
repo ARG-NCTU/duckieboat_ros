@@ -23,7 +23,6 @@ class fling_task():
         self.goal = [0, 0]
         
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
-        self.pub_cmd = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         self.nav_fling_action = True
         self.sub = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
         self.sub_pose = rospy.Subscriber("fling_pose", PoseStamped, self.cb_dock, queue_size=1)

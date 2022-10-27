@@ -1,0 +1,9 @@
+<launch>
+    <arg name="veh" default="wamv" />
+    <arg name="goal_dis" default='4' />
+
+    <node ns="$(arg veh)" pkg="control" type="multipoint_sound.py" name="sound_multipoint" output="screen">
+        <param name="goal_dis" value="$(arg goal_dis)"/>
+    </node>
+
+</launch>
