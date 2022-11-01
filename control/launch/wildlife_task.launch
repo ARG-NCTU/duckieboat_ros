@@ -1,0 +1,9 @@
+<launch>
+    <arg name="veh" default="wamv" />
+    <arg name="goal_dis" default='5' />
+
+    <node ns="$(arg veh)" pkg="control" type="multipoint_wildlife.py" name="wildlife_multipoint" output="screen">
+        <param name="goal_dis" value="$(arg goal_dis)"/>
+    </node>
+
+</launch>
