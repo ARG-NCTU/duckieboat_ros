@@ -40,7 +40,6 @@ class multipoint_wildlife():
         self.goal = None
         self.tmp_goal = None
         self.sub_task_state = Int32MultiArray()
-        self.sub_task_state.data = [0 ,0]
         
         self.start_x = 10
         self.start_y = 15
@@ -48,7 +47,7 @@ class multipoint_wildlife():
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
         self.pub_sub_task_state = rospy.Publisher("wildlife_task_state", Int32MultiArray, queue_size=1)
         
-        self.sub_hsi_name = rospy.Subscriber("hsi/wildlife_name", String, self.cb_hsi_name, queue_size=1)
+        self.sub_hsi_name = rospy.Subscriber("hsi/scan_result", String, self.cb_hsi_name, queue_size=1)
         self.sub_zed_goal = rospy.Subscriber("wildlife_pose", PoseStamped, self.cb_zed_goal, queue_size=1)
         self.sub_odom = rospy.Subscriber("localization_gps_imu/pose", PoseStamped, self.cb_odom, queue_size=1)
 

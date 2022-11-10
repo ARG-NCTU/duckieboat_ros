@@ -36,18 +36,18 @@ class docking_task():
         self.no_dock_pose = False
         if self.last_goal == False:
             print("Position goal")
-            self.goal[0] = msg.pose.position.x
-            self.goal[1] = msg.pose.position.y-12
+            self.goal[0] = msg.pose.position.x+12
+            self.goal[1] = msg.pose.position.y
 
         elif self.last_goal == True:
             print("Dock position goal")
-            self.goal[0] = msg.pose.position.x
-            self.goal[1] = msg.pose.position.y-2
+            self.goal[0] = msg.pose.position.x+2
+            self.goal[1] = msg.pose.position.y
 
 
     def cb_odom(self, msg):
         if self.no_dock_pose == True:
-            self.goal = [msg.pose.pose.position.x+3, msg.pose.pose.position.y+10]
+            self.goal = [msg.pose.pose.position.x-10, msg.pose.pose.position.y+1]
 
         odom = msg
         x = odom.pose.pose.position.x
