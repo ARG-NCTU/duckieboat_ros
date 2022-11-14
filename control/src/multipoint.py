@@ -6,11 +6,11 @@ from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 import Queue
 
-r = 5.5
+r = rospy.get_param("~goal_dis", 4.5)
 points = Queue.Queue(maxsize=20)
 
 reverse = False
-pt_list =  [(-3,-1),(-0.5,-13),(2,-25),(12,-23),(4.5,-12.5),(3,-2.5),(9,-4),(15.5,-12.5),(22,-21),(32,-19),(23.5,-12),(15,-5.5),(20,-7),(31,-12),(42,-17),(2,-25),(-3,-1)]
+pt_list =  [(340, 188), (328, 200),(311, 204),(297, 203),(290, 204),(277, 209),(265, 212),(256, 210)]
 p_list = []
 
 if reverse :
@@ -33,8 +33,8 @@ pub = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
 def cb_odom(msg):
     odom = msg
     global goal
-    x = odom.pose.pose.position.x
-    y = odom.pose.pose.position.y
+    x = odom.pose.position.x
+    y = odom.pose.position.y
     dis = math.sqrt(math.pow(x- goal[0],2)+math.pow(y- goal[1],2))
     if dis<r:
         points.put(goal)
@@ -42,6 +42,7 @@ def cb_odom(msg):
 
     pose = PoseStamped()
     pose.header = Header()
+    pose.header.frame_id = "map"
     pose.pose.position.x = goal[0]
     pose.pose.position.y = goal[1]
     pub.publish(pose)
@@ -51,8 +52,8 @@ odomerty_name=''
 if sim:
     odomerty_name = "p3d_odom"
 else:
-    odomerty_name = "localization_gps_imu/odometry"
+    odomerty_name = "localization_gps_imu/pose"
 
-sub = rospy.Subscriber(odomerty_name,Odometry,cb_odom,queue_size=1)
+sub = rospy.Subscriber(odomerty_name,PoseStamped,cb_odom,queue_size=1)
 
 rospy.spin()

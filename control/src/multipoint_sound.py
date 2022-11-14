@@ -53,11 +53,11 @@ class sound_task():
 
     def cb_far_sound(self, msg):
         dis_far_totem = math.sqrt(math.pow(self.x-msg.pose.position.x,2)+math.pow(self.y-msg.pose.position.y,2))
-        if(dis_far_totem > 20 and self.task_state.data<=1):
+        if(dis_far_totem > 10 and self.task_state.data<=1):
             self.task_state.data = 1
             self.far_totem_pose[0] = msg.pose.position.x
             self.far_totem_pose[1] = msg.pose.position.y
-            str_info = "x="+ str(self.far_totem_pose[0])+", y="+str(self.far_totem_pose[1])+", format=radial, radius=12.5, pts="+str(self.sub_goal_num) 
+            str_info = "x="+ str(self.far_totem_pose[0])+", y="+str(self.far_totem_pose[1])+", format=radial, radius=5, pts="+str(self.sub_goal_num) 
             waypointploy = pyivp.string2Poly(str_info)
             waypointseg = waypointploy.exportSegList(self.x, self.y)
             sub_goal = [[0 ,0] for i in range(self.sub_goal_num)]

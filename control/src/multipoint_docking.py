@@ -22,7 +22,12 @@ class docking_task():
         self.docking_action = True
         # self.points = Queue.Queue(maxsize=20)
         self.goal = [0, 0]
+        self.pt_list = [[137, 206], [140, 190], [150, 195], [155, 200]]
+        self.points = Queue.Queue(maxsize=20)
+        for i in range(len(self.pt_list)):
+            self.points.put(self.pt_list[i])
         
+        self.goal = self.points.get()
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
         
         self.sub_dock_action = rospy.Subscriber("/wamv/docking_action", Bool, self.cb_docking_action, queue_size=1)
@@ -36,18 +41,24 @@ class docking_task():
         self.no_dock_pose = False
         if self.last_goal == False:
             print("Position goal")
-            self.goal[0] = msg.pose.position.x+12
-            self.goal[1] = msg.pose.position.y
+            self.goal[0] = msg.pose.position.x-6.5
+            self.goal[1] = msg.pose.position.y-14
 
         elif self.last_goal == True:
             print("Dock position goal")
-            self.goal[0] = msg.pose.position.x+2
-            self.goal[1] = msg.pose.position.y
+            self.goal[0] = msg.pose.position.x-2
+            self.goal[1] = msg.pose.position.y-2
 
 
     def cb_odom(self, msg):
         if self.no_dock_pose == True:
-            self.goal = [msg.pose.pose.position.x-10, msg.pose.pose.position.y+1]
+            print("No dock goal")
+            odom = msg
+            x = odom.pose.pose.position.x
+            y = odom.pose.pose.position.y
+            dis = math.sqrt(math.pow(x- self.goal[0],2)+math.pow(y- self.goal[1],2))
+            if dis< self.radius:
+                self.goal = self.points.get()
 
         odom = msg
         x = odom.pose.pose.position.x
