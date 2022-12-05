@@ -40,11 +40,11 @@ class sound_task():
         self.pub_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped,queue_size=1)
         self.pub_task_state = rospy.Publisher("sound_task_state", Int32, queue_size=1)
         self.pub_nav_to_gate_state = rospy.Publisher("/nav_perception_gate_finished_success", Bool, queue_size=1)
-        self.pub_nav_return_state = rospy.Publisher("/nav_gate_finished_success", Bool, queue_size=1)
+        self.pub_nav_return_state = rospy.Publisher("/nav_return_finished_success", Bool, queue_size=1)
         
         self.sub_odom = rospy.Subscriber("localization_gps_imu/odometry", Odometry, self.cb_odom, queue_size=1)
         self.sub_gate_action = rospy.Subscriber("/nav_perception_gate_active", Active, self.cb_gate_tree, queue_size=1)
-        self.sub_return = rospy.Subscriber("/nav_gate_active", Active, self.cb_return_tree, queue_size=1)
+        self.sub_return = rospy.Subscriber("/nav_return_active", Active, self.cb_return_tree, queue_size=1)
         # self.sub_pose = rospy.Subscriber("sound_pose", PoseStamped, self.cb_sound, queue_size=1)
         rospy.loginfo("Wait for gate pose")
         sound_pose_info = rospy.wait_for_message('sound_pose', PoseStamped)
